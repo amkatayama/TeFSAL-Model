@@ -6,5 +6,9 @@ model's ability to accurately predict unencountered data.
 
 ## Project Details
 ### Software Architecture Diagram
-![Software Architecture Diagram](../software_arch_diagram)
+![Software Architecture Diagram](./software_arch_diagram.png)
+
+### Software Demonstration Video
+Click the link to watch: https://youtu.be/jBZY8uPZPzQ?si=4WCkPPp2gRGuePCd
+
 
