@@ -9,6 +9,6 @@ model's ability to accurately predict unencountered data.
 ![Software Architecture Diagram](./software_arch_diagram.png)
 
 ### Software Demonstration Video
-Click the link to watch: https://youtu.be/jBZY8uPZPzQ?si=4WCkPPp2gRGuePCd
+Click the link to watch: [https://youtu.be/jBZY8uPZPzQ?si=4WCkPPp2gRGuePCd](https://youtu.be/Dn-6aoVNxg8)
 
 
