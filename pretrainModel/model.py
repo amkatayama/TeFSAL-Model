@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 # import to use batched up preprocessed tensors
-from mosi_to_tensor import preprocess_mosi, tensor_fusion 
+from SelectAdditiveLearning.pretrainModel.mosei_to_tensor import preprocess_mosi, tensor_fusion 
 from tensor_fusion import TFN
 
 epsilon = 1e-7
@@ -23,14 +23,34 @@ def linear(x):
 def sigmoid(x):
     return torch.sigmoid(x)
 
-# Define LogisticRegression class
-class LogisticRegression(nn.Module):
-    def __init__(self, input_size, output_size):
-        super(LogisticRegression, self).__init__()
-        self.linear = nn.Linear(input_size, output_size)
+# Define LeNetConvPoolLayer class
+class LeNetConvPoolLayer(nn.Module):
+    def __init__(self, input_channels, output_channels, kernel_size, pool_size, activation):
+        super(LeNetConvPoolLayer, self).__init__()
+        self.conv = nn.Conv2d(input_channels, output_channels, kernel_size)
+        self.pool = nn.MaxPool2d(pool_size)
+        self.activation = activation
 
     def forward(self, x):
-        x = self.linear(x)
+        x = self.conv(x)
+        x = self.pool(x)
+        x = self.activation(x)
+        return x
+
+class LeNetConvPoolLayer(nn.Module):
+    def __init__(self, input_channels, activation):
+        super(LeNetConvPoolLayer, self).__init__()
+        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=32, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.activation = activation
+        
+    def forward(self, x):
+        x = self.pool(nn.functional.relu(self.conv1(x)))
+        x = self.pool(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 64 * (x.size(2) // 2))
+        x = nn.functional.relu(self.fc1(x))
+        x = self.fc2(x)
         return x
 
 # Define DropoutHiddenLayer class
@@ -60,16 +80,11 @@ def evaluate_lenet5(learning_rate=1e-7, n_epochs=200, batch_size=50, l1=0., l2=0
     test_loader = DataLoader(test_set, shuffle=False, batch_size=batch_sz*3, collate_fn=tensor_fusion)
 
     # Initialize model
-    # model = nn.Sequential(
-    #     LeNetConvPoolLayer(1, 25, (1, 5), (1, 4), tanh),
-    #     # LeNetConvPoolLayer(25, 50, (25, 1), (1, 5), tanh),
-    #     DropoutHiddenLayer(64 * 1 * 9, 80, tanh, dropout),
-    #     LogisticRegression(80, 2)
-    # )
     model = nn.Sequential(
-        DropoutHiddenLayer(4225, 512, tanh, dropout),
-        DropoutHiddenLayer(512, 256, tanh, dropout),
-        LogisticRegression(256, 2)
+        LeNetConvPoolLayer(1, 25, (1, 5), (1, 4), tanh),
+        LeNetConvPoolLayer(25, 50, (25, 1), (1, 5), tanh),
+        DropoutHiddenLayer(50 * 1 * 9, 80, tanh, dropout),
+        LogisticRegression(80, 2)
     )
 
     # Define optimizer
@@ -78,7 +93,7 @@ def evaluate_lenet5(learning_rate=1e-7, n_epochs=200, batch_size=50, l1=0., l2=0
     # Define loss function
     criterion = nn.CrossEntropyLoss()
 
-   # Training loop
+    # Training loop
     for epoch in range(n_epochs):
         model.train()
         for i, (inputs, labels) in enumerate(train_loader):
